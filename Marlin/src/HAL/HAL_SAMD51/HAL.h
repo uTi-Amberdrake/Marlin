@@ -33,9 +33,11 @@
   #include "MarlinSerial_AGCM4.h"
 
   // Serial ports
+  #if !WITHIN(SERIAL_PORT, -1, 3)
+    #error "SERIAL_PORT must be from -1 to 3"
+  #endif
 
   // MYSERIAL0 required before MarlinSerial includes!
-
   #if SERIAL_PORT == -1
     #define MYSERIAL0 Serial
   #elif SERIAL_PORT == 0
@@ -44,16 +46,18 @@
     #define MYSERIAL0 Serial2
   #elif SERIAL_PORT == 2
     #define MYSERIAL0 Serial3
-  #elif SERIAL_PORT == 3
-    #define MYSERIAL0 Serial4
   #else
-    #error "SERIAL_PORT must be from -1 to 3. Please update your configuration."
+    #define MYSERIAL0 Serial4
   #endif
 
   #ifdef SERIAL_PORT_2
-    #if SERIAL_PORT_2 == SERIAL_PORT
-      #error "SERIAL_PORT_2 must be different than SERIAL_PORT. Please update your configuration."
-    #elif SERIAL_PORT_2 == -1
+    #if !WITHIN(SERIAL_PORT_2, -1, 3)
+      #error "SERIAL_PORT_2 must be from -1 to 3"
+    #elif SERIAL_PORT_2 == SERIAL_PORT
+      #error "SERIAL_PORT_2 must be different than SERIAL_PORT"
+    #endif
+    #define NUM_SERIAL 2
+    #if SERIAL_PORT_2 == -1
       #define MYSERIAL1 Serial
     #elif SERIAL_PORT_2 == 0
       #define MYSERIAL1 Serial1
@@ -61,34 +65,11 @@
       #define MYSERIAL1 Serial2
     #elif SERIAL_PORT_2 == 2
       #define MYSERIAL1 Serial3
-    #elif SERIAL_PORT_2 == 3
-      #define MYSERIAL1 Serial4
     #else
-      #error "SERIAL_PORT_2 must be from -1 to 3. Please update your configuration."
+      #define MYSERIAL1 Serial4
     #endif
-    #define NUM_SERIAL 2
   #else
     #define NUM_SERIAL 1
-  #endif
-
-  #ifdef DGUS_SERIAL_PORT
-    #if DGUS_SERIAL_PORT == SERIAL_PORT
-      #error "DGUS_SERIAL_PORT must be different than SERIAL_PORT. Please update your configuration."
-    #elif defined(SERIAL_PORT_2) && DGUS_SERIAL_PORT == SERIAL_PORT_2
-      #error "DGUS_SERIAL_PORT must be different than SERIAL_PORT_2. Please update your configuration."
-    #elif DGUS_SERIAL_PORT == -1
-      #define DGUS_SERIAL Serial
-    #elif DGUS_SERIAL_PORT == 0
-      #define DGUS_SERIAL Serial1
-    #elif DGUS_SERIAL_PORT == 1
-      #define DGUS_SERIAL Serial2
-    #elif DGUS_SERIAL_PORT == 2
-      #define DGUS_SERIAL Serial3
-    #elif DGUS_SERIAL_PORT == 2
-      #define DGUS_SERIAL Serial4
-    #else
-      #error "DGUS_SERIAL_PORT must be from -1 to 3. Please update your configuration."
-    #endif
   #endif
 
 #endif // ADAFRUIT_GRAND_CENTRAL_M4
@@ -135,7 +116,7 @@ void HAL_adc_init();
 #define HAL_ADC_READY()     true
 
 void HAL_adc_start_conversion(const uint8_t adc_pin);
-inline uint16_t HAL_adc_get_result() { return HAL_adc_result; }
+uint16_t HAL_adc_get_result();
 
 //
 // Pin Map

@@ -52,9 +52,7 @@ void recalc_delta_settings();
   constexpr float calibration_radius_factor = 1;
 #endif
 
-#if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
-  float delta_calibration_radius();
-#endif
+float delta_calibration_radius();
 
 /**
  * Delta Inverse Kinematics

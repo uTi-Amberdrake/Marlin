@@ -70,7 +70,7 @@
 #include "../core/language.h"
 #include "../gcode/parser.h"
 
-#include "../MarlinCore.h"
+#include "../Marlin.h"
 
 #if HAS_LEVELING
   #include "../feature/bedlevel/bedlevel.h"
@@ -1252,13 +1252,13 @@ void Planner::check_axes_activity() {
   // Disable inactive axes
   //
   #if ENABLED(DISABLE_X)
-    if (!axis_active.x) DISABLE_AXIS_X();
+    if (!axis_active.x) disable_X();
   #endif
   #if ENABLED(DISABLE_Y)
-    if (!axis_active.y) DISABLE_AXIS_Y();
+    if (!axis_active.y) disable_Y();
   #endif
   #if ENABLED(DISABLE_Z)
-    if (!axis_active.z) DISABLE_AXIS_Z();
+    if (!axis_active.z) disable_Z();
   #endif
   #if ENABLED(DISABLE_E)
     if (!axis_active.e) disable_e_steppers();
@@ -1308,21 +1308,7 @@ void Planner::check_axes_activity() {
     #if HAS_FAN2
       FAN_SET(2);
     #endif
-    #if HAS_FAN3
-      FAN_SET(3);
-    #endif
-    #if HAS_FAN4
-      FAN_SET(4);
-    #endif
-    #if HAS_FAN5
-      FAN_SET(5);
-    #endif
-    #if HAS_FAN6
-      FAN_SET(6);
-    #endif
-    #if HAS_FAN7
-      FAN_SET(7);
-    #endif
+
   #endif // FAN_COUNT > 0
 
   #if ENABLED(AUTOTEMP)
@@ -1409,7 +1395,7 @@ void Planner::check_axes_activity() {
 
       #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
         const float fade_scaling_factor = fade_scaling_factor_for_z(raw.z);
-      #elif DISABLED(MESH_BED_LEVELING)
+      #else
         constexpr float fade_scaling_factor = 1.0;
       #endif
 
@@ -1446,7 +1432,7 @@ void Planner::check_axes_activity() {
 
         #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
           const float fade_scaling_factor = fade_scaling_factor_for_z(raw.z);
-        #elif DISABLED(MESH_BED_LEVELING)
+        #else
           constexpr float fade_scaling_factor = 1.0;
         #endif
 
@@ -1905,29 +1891,29 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
   // Enable active axes
   #if CORE_IS_XY
     if (block->steps.a || block->steps.b) {
-      ENABLE_AXIS_X();
-      ENABLE_AXIS_Y();
+      enable_X();
+      enable_Y();
     }
     #if DISABLED(Z_LATE_ENABLE)
-      if (block->steps.z) ENABLE_AXIS_Z();
+      if (block->steps.z) enable_Z();
     #endif
   #elif CORE_IS_XZ
     if (block->steps.a || block->steps.c) {
-      ENABLE_AXIS_X();
-      ENABLE_AXIS_Z();
+      enable_X();
+      enable_Z();
     }
-    if (block->steps.y) ENABLE_AXIS_Y();
+    if (block->steps.y) enable_Y();
   #elif CORE_IS_YZ
     if (block->steps.b || block->steps.c) {
-      ENABLE_AXIS_Y();
-      ENABLE_AXIS_Z();
+      enable_Y();
+      enable_Z();
     }
-    if (block->steps.x) ENABLE_AXIS_X();
+    if (block->steps.x) enable_X();
   #else
-    if (block->steps.x) ENABLE_AXIS_X();
-    if (block->steps.y) ENABLE_AXIS_Y();
+    if (block->steps.x) enable_X();
+    if (block->steps.y) enable_Y();
     #if DISABLED(Z_LATE_ENABLE)
-      if (block->steps.z) ENABLE_AXIS_Z();
+      if (block->steps.z) enable_Z();
     #endif
   #endif
 
@@ -1945,27 +1931,27 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
 
         #if HAS_DUPLICATION_MODE
           if (extruder_duplication_enabled && extruder == 0) {
-            ENABLE_AXIS_E1();
+            enable_E1();
             g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
           }
         #endif
 
         #define ENABLE_ONE_E(N) do{ \
           if (extruder == N) { \
-            ENABLE_AXIS_E##N(); \
+            enable_E##N(); \
             g_uc_extruder_last_move[N] = (BLOCK_BUFFER_SIZE) * 2; \
           } \
           else if (!g_uc_extruder_last_move[N]) \
-            DISABLE_AXIS_E##N(); \
+            disable_E##N(); \
         }while(0);
 
       #else
 
-        #define ENABLE_ONE_E(N) ENABLE_AXIS_E##N();
+        #define ENABLE_ONE_E(N) enable_E##N();
 
       #endif
 
-      REPEAT(EXTRUDERS, ENABLE_ONE_E); // (ENABLE_ONE_E must end with semicolon)
+      REPEAT(EXTRUDERS, ENABLE_ONE_E);
     }
   #endif // EXTRUDERS
 
@@ -2763,7 +2749,7 @@ void Planner::refresh_positioning() {
 inline void limit_and_warn(float &val, const uint8_t axis, PGM_P const setting_name, const xyze_float_t &max_limit) {
   const uint8_t lim_axis = axis > E_AXIS ? E_AXIS : axis;
   const float before = val;
-  LIMIT(val, 0.1, max_limit[lim_axis]);
+  LIMIT(val, 1, max_limit[lim_axis]);
   if (before != val) {
     SERIAL_CHAR(axis_codes[lim_axis]);
     SERIAL_ECHOPGM(" Max ");

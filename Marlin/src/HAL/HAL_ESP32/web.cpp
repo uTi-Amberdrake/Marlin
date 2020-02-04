@@ -22,12 +22,13 @@
 
 #ifdef ARDUINO_ARCH_ESP32
 
+#include <SPIFFS.h>
+#undef DISABLED  // esp32-hal-gpio.h
+
 #include "../../inc/MarlinConfigPre.h"
 
-#if BOTH(WIFISUPPORT, WEBSUPPORT)
+#if ENABLED(WEBSUPPORT)
 
-#undef DISABLED  // esp32-hal-gpio.h
-#include <SPIFFS.h>
 #include "wifi.h"
 
 AsyncEventSource events("/events"); // event source (Server-Sent events)
@@ -42,5 +43,5 @@ void web_init() {
   server.onNotFound(onNotFound);
 }
 
-#endif // WIFISUPPORT && WEBSUPPORT
+#endif // WEBSUPPORT
 #endif // ARDUINO_ARCH_ESP32

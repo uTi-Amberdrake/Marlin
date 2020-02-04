@@ -156,21 +156,9 @@
 //
 #if HAS_SPI_LCD
 
-  #define SD_DETECT_PIN         -1
-
   #if HAS_GRAPHICAL_LCD
 
-    #if ENABLED(LCD_FOR_MELZI)
-
-      #define LCD_PINS_RS       17
-      #define LCD_PINS_ENABLE   16
-      #define LCD_PINS_D4       11
-
-      #define BOARD_ST7920_DELAY_1 DELAY_NS(0)
-      #define BOARD_ST7920_DELAY_2 DELAY_NS(188)
-      #define BOARD_ST7920_DELAY_3 DELAY_NS(0)
-
-    #elif ENABLED(U8GLIB_ST7920) // SPI GLCD 12864 ST7920 ( like [www.digole.com] ) For Melzi V2.0
+    #if ENABLED(U8GLIB_ST7920) // SPI GLCD 12864 ST7920 ( like [www.digole.com] ) For Melzi V2.0
 
       #if IS_MELZI
         #define LCD_PINS_RS     30   // CS chip select /SS chip slave select
@@ -189,7 +177,7 @@
         #define LCD_PINS_D7     27
       #endif
 
-    #else
+    #else // DOGM SPI LCD Support
 
       #define DOGLCD_A0         30
 
@@ -213,63 +201,70 @@
     #endif
 
     // Uncomment screen orientation
-    //#define LCD_SCREEN_ROT_0
+    #define LCD_SCREEN_ROT_0
     //#define LCD_SCREEN_ROT_90
     //#define LCD_SCREEN_ROT_180
     //#define LCD_SCREEN_ROT_270
 
-  #elif ENABLED(ZONESTAR_LCD) // For the Tronxy Melzi boards
+  #else // !HAS_GRAPHICAL_LCD
 
-    #define LCD_PINS_RS    28
-    #define LCD_PINS_ENABLE 29
-    #define LCD_PINS_D4    10
-    #define LCD_PINS_D5    11
-    #define LCD_PINS_D6    16
-    #define LCD_PINS_D7    17
+    #define LCD_PINS_RS          4
+    #define LCD_PINS_ENABLE     17
+    #define LCD_PINS_D4         30
+    #define LCD_PINS_D5         29
+    #define LCD_PINS_D6         28
+    #define LCD_PINS_D7         27
 
-  #else
+  #endif // !HAS_GRAPHICAL_LCD
 
-    #define LCD_PINS_RS     4
-    #define LCD_PINS_ENABLE 17
-    #define LCD_PINS_D4    30
-    #define LCD_PINS_D5    29
-    #define LCD_PINS_D6    28
-    #define LCD_PINS_D7    27
-
-  #endif
-
-  #if ENABLED(LCD_FOR_MELZI)
-
-    #define BTN_ENC        28
-    #define BTN_EN1        29
-    #define BTN_EN2        30
-
-  #elif ENABLED(ZONESTAR_LCD) // For the Tronxy Melzi boards
-
-    #define ADC_KEYPAD_PIN  1
-    #define BTN_EN1        -1
-    #define BTN_EN2        -1
-
-  #elif ENABLED(LCD_I2C_PANELOLU2)
+  #if ENABLED(LCD_I2C_PANELOLU2)
 
     #if IS_MELZI
-      #define BTN_ENC      29
-      #define LCD_SDSS     30   // Panelolu2 SD card reader rather than the Melzi
+      #define BTN_ENC           29
+      #define LCD_SDSS          30   // Panelolu2 SD card reader rather than the Melzi
     #else
-      #define BTN_ENC      30
+      #define BTN_ENC           30
     #endif
 
-  #else // !LCD_FOR_MELZI && !ZONESTAR_LCD && !LCD_I2C_PANELOLU2
+  #elif ENABLED(LCD_FOR_MELZI)
 
-    #define BTN_ENC        16
-    #define LCD_SDSS       28   // Smart Controller SD card reader rather than the Melzi
+    #define LCD_PINS_RS         17
+    #define LCD_PINS_ENABLE     16
+    #define LCD_PINS_D4         11
+    #define BTN_ENC             28
+    #define BTN_EN1             29
+    #define BTN_EN2             30
+
+    #define BOARD_ST7920_DELAY_1 DELAY_NS(0)
+    #define BOARD_ST7920_DELAY_2 DELAY_NS(188)
+    #define BOARD_ST7920_DELAY_3 DELAY_NS(0)
+
+  #elif ENABLED(ZONESTAR_LCD) // For the Tronxy Melzi boards
+
+    #define LCD_PINS_RS         28
+    #define LCD_PINS_ENABLE     29
+    #define LCD_PINS_D4         10
+    #define LCD_PINS_D5         11
+    #define LCD_PINS_D6         16
+    #define LCD_PINS_D7         17
+    #define ADC_KEYPAD_PIN       1
+
+    #define BTN_EN1             -1
+    #define BTN_EN2             -1
+
+  #else  // !LCD_I2C_PANELOLU2 && !LCD_FOR_MELZI && !ZONESTAR_LCD
+
+    #define BTN_ENC             16
+    #define LCD_SDSS            28   // Smart Controller SD card reader rather than the Melzi
 
   #endif
 
   #if ENABLED(NEWPANEL) && !defined(BTN_EN1)
-    #define BTN_EN1        11
-    #define BTN_EN2        10
+    #define BTN_EN1             11
+    #define BTN_EN2             10
   #endif
+
+  #define SD_DETECT_PIN         -1
 
 #endif // HAS_SPI_LCD
 

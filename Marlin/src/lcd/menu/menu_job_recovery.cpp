@@ -38,8 +38,9 @@ static void lcd_power_loss_recovery_resume() {
   queue.inject_P(PSTR("M1000"));
 }
 
-void lcd_power_loss_recovery_cancel() {
-  recovery.cancel();
+static void lcd_power_loss_recovery_cancel() {
+  card.removeJobRecoveryFile();
+  card.autostart_index = 0;
   ui.return_to_status();
 }
 

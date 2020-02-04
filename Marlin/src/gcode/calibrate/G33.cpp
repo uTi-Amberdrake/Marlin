@@ -439,6 +439,7 @@ void GcodeSuite::G33() {
              _opposite_results    = (_4p_calibration && !towers_set) || probe_points >= 3,
              _endstop_results     = probe_points != 1 && probe_points != -1 && probe_points != 0,
              _angle_results       = probe_points >= 3 && towers_set;
+  static const char save_message[] PROGMEM = "Save with M500 and/or copy to Configuration.h";
   int8_t iterations = 0;
   float test_precision,
         zero_std_dev = (verbose_level ? 999.0f : 0.0f), // 0.0 in dry-run mode : forced end
@@ -624,7 +625,8 @@ void GcodeSuite::G33() {
           sprintf_P(&mess[15], PSTR("%03i.x"), (int)LROUND(zero_std_dev_min));
         ui.set_status(mess);
         print_calibration_settings(_endstop_results, _angle_results);
-        SERIAL_ECHOLNPGM("Save with M500 and/or copy to Configuration.h");
+        serialprintPGM(save_message);
+        SERIAL_EOL();
       }
       else { // !end iterations
         char mess[15];

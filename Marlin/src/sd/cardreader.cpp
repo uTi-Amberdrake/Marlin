@@ -26,7 +26,7 @@
 
 #include "cardreader.h"
 
-#include "../MarlinCore.h"
+#include "../Marlin.h"
 #include "../lcd/ultralcd.h"
 #include "../module/planner.h"
 #include "../module/printcounter.h"
@@ -504,7 +504,7 @@ void CardReader::openFileRead(char * const path, const uint8_t subcall_type/*=0*
   stopSDPrint();
 
   SdFile *curDir;
-  const char * const fname = diveToFile(true, curDir, path);
+  const char * const fname = diveToFile(curDir, path);
   if (!fname) return;
 
   if (file.open(curDir, fname, O_READ)) {
@@ -532,7 +532,7 @@ void CardReader::openFileWrite(char * const path) {
   stopSDPrint();
 
   SdFile *curDir;
-  const char * const fname = diveToFile(false, curDir, path);
+  const char * const fname = diveToFile(curDir, path);
   if (!fname) return;
 
   if (file.open(curDir, fname, O_CREAT | O_APPEND | O_WRITE | O_TRUNC)) {
@@ -557,7 +557,7 @@ void CardReader::removeFile(const char * const name) {
   //stopSDPrint();
 
   SdFile *curDir;
-  const char * const fname = diveToFile(false, curDir, name);
+  const char * const fname = diveToFile(curDir, name);
   if (!fname) return;
 
   if (file.remove(curDir, fname)) {
@@ -678,7 +678,7 @@ void CardReader::selectFileByIndex(const uint16_t nr) {
 //
 void CardReader::selectFileByName(const char * const match) {
   #if ENABLED(SDSORT_CACHE_NAMES)
-    for (uint16_t nr = 0; nr < sort_count; nr++)
+    for (int nr = 0; nr < sort_count; nr++)
       if (strcasecmp(match, sortshort[nr]) == 0) {
         strcpy(filename, sortshort[nr]);
         strcpy(longFilename, sortnames[nr]);
@@ -704,28 +704,26 @@ uint16_t CardReader::countFilesInWorkDir() {
  *
  * A nullptr result indicates an unrecoverable error.
  */
-const char* CardReader::diveToFile(const bool update_cwd, SdFile*& curDir, const char * const path, const bool echo/*=false*/) {
+const char* CardReader::diveToFile(SdFile*& curDir, const char * const path, const bool echo/*=false*/) {
   // Track both parent and subfolder
   static SdFile newDir1, newDir2;
   SdFile *sub = &newDir1, *startDir;
 
-  // Parsing the path string
   const char *item_name_adr = path;
-
-  if (path[0] == '/') {               // Starting at the root directory?
+  if (path[0] == '/') {
     curDir = &root;
-    if (update_cwd) workDirDepth = 0; // The cwd can be updated for the benefit of sub-programs
+    workDirDepth = 0;
     item_name_adr++;
   }
   else
-    curDir = &workDir;                // Dive from workDir (as set by the UI)
+    curDir = &workDir;
 
   startDir = curDir;
-  while (item_name_adr) {
-    // Find next subdirectory delimiter
-    char * const name_end = strchr(item_name_adr, '/');
 
-    // Last atom in the path? Item found.
+  // Start dive
+  while (item_name_adr) {
+    // Find next sub
+    char * const name_end = strchr(item_name_adr, '/');
     if (name_end <= item_name_adr) break;
 
     // Set subDirName
@@ -748,16 +746,13 @@ const char* CardReader::diveToFile(const bool update_cwd, SdFile*& curDir, const
     // curDir now subDir
     curDir = sub;
 
-    // Update workDirParents, workDirDepth, and workDir
-    if (update_cwd) {
-      if (workDirDepth < MAX_DIR_DEPTH) workDirParents[workDirDepth++] = *curDir;
-      workDir = *curDir;
-    }
+    // Update workDirParents and workDirDepth
+    if (workDirDepth < MAX_DIR_DEPTH) workDirParents[workDirDepth++] = *curDir;
 
-    // Point sub at the other scratch object
+    // Point sub pointer to unused newDir
     sub = (curDir != &newDir1) ? &newDir1 : &newDir2;
 
-    // Next path atom address
+    // item_name_adr point to next sub
     item_name_adr = name_end + 1;
   }
   return item_name_adr;
@@ -1076,7 +1071,7 @@ void CardReader::printingHasFinished() {
     stopSDPrint();
 
     #if ENABLED(POWER_LOSS_RECOVERY)
-      recovery.purge();
+      removeJobRecoveryFile();
     #endif
 
     #if ENABLED(SD_FINISHED_STEPPERRELEASE) && defined(SD_FINISHED_RELEASECOMMAND)

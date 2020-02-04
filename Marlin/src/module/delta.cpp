@@ -35,7 +35,7 @@
 #include "planner.h"
 #include "endstops.h"
 #include "../lcd/ultralcd.h"
-#include "../MarlinCore.h"
+#include "../Marlin.h"
 
 #if HAS_BED_PROBE
   #include "probe.h"
@@ -86,23 +86,19 @@ void recalc_delta_settings() {
  * Get a safe radius for calibration
  */
 
-#if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
-
-  #if ENABLED(DELTA_AUTO_CALIBRATION)
-    float calibration_radius_factor = 1;
-  #endif
-
-  float delta_calibration_radius() {
-    return calibration_radius_factor * (
-      #if HAS_BED_PROBE
-        FLOOR((DELTA_PRINTABLE_RADIUS) - _MAX(HYPOT(probe_offset_xy.x, probe_offset_xy.y), MIN_PROBE_EDGE))
-      #else
-        DELTA_PRINTABLE_RADIUS
-      #endif
-    );
-  }
-
+#if ENABLED(DELTA_AUTO_CALIBRATION)
+  float calibration_radius_factor = 1;
 #endif
+
+float delta_calibration_radius() {
+  return FLOOR((DELTA_PRINTABLE_RADIUS - (
+    #if HAS_BED_PROBE
+      _MAX(HYPOT(probe_offset.x, probe_offset.y), MIN_PROBE_EDGE)
+    #else
+      MIN_PROBE_EDGE
+    #endif
+  )) * calibration_radius_factor);
+}
 
 /**
  * Delta Inverse Kinematics
@@ -254,7 +250,7 @@ void home_delta() {
       - probe_offset.z
     #endif
   );
-  line_to_current_position(homing_feedrate(Z_AXIS));
+  line_to_current_position(homing_feedrate(X_AXIS));
   planner.synchronize();
 
   // Re-enable stealthChop if used. Disable diag1 pin on driver.
@@ -279,14 +275,6 @@ void home_delta() {
   LOOP_XYZ(i) set_axis_is_at_home((AxisEnum)i);
 
   sync_plan_position();
-
-  #if DISABLED(DELTA_HOME_TO_SAFE_ZONE) && defined(HOMING_BACKOFF_MM)
-    constexpr xyz_float_t endstop_backoff = HOMING_BACKOFF_MM;
-    if (endstop_backoff.z) {
-      current_position.z -= ABS(endstop_backoff.z) * Z_HOME_DIR;
-      line_to_current_position(homing_feedrate(Z_AXIS));
-    }
-  #endif
 
   if (DEBUGGING(LEVELING)) DEBUG_POS("<<< home_delta", current_position);
 }

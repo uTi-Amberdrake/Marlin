@@ -24,7 +24,7 @@
 
 #include "../../inc/MarlinConfigPre.h"
 
-#if BOTH(WIFISUPPORT, WEBSUPPORT)
+#if ENABLED(WEBSUPPORT)
 
 #include "../../core/serial.h"
 
@@ -40,5 +40,5 @@ void spiffs_init() {
     SERIAL_ERROR_MSG("SPIFFS mount failed");
 }
 
-#endif // WIFISUPPORT && WEBSUPPORT
+#endif // WEBSUPPORT
 #endif // ARDUINO_ARCH_ESP32

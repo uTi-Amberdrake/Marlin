@@ -20,12 +20,6 @@
  *
  */
 
-/**
- * gcode/temperature/M141_M191.cpp
- *
- * Chamber target temperature control
- */
-
 #include "../../inc/MarlinConfig.h"
 
 #if HAS_HEATED_CHAMBER
@@ -44,7 +38,7 @@
   #include "../../feature/leds/leds.h"
 #endif
 
-#include "../../MarlinCore.h" // for wait_for_heatup, idle, startOrResumeJob
+#include "../../Marlin.h" // for wait_for_heatup, idle, startOrResumeJob
 
 /**
  * M141: Set chamber temperature
@@ -65,7 +59,8 @@ void GcodeSuite::M191() {
   if (no_wait_for_cooling || parser.seenval('R')) {
     thermalManager.setTargetChamber(parser.value_celsius());
     #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
-      thermalManager.check_timer_autostart(true, false);
+      if (parser.value_celsius() > CHAMBER_MINTEMP)
+        startOrResumeJob();
     #endif
   }
   else return;

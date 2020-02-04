@@ -26,7 +26,7 @@
 
 #include "parser.h"
 
-#include "../MarlinCore.h"
+#include "../Marlin.h"
 
 #if NUM_SERIAL > 1
   #include "queue.h"
@@ -346,7 +346,7 @@ void GCodeParser::unknown_command_error() {
     SERIAL_ECHOLNPGM(")");
     #if ENABLED(FASTER_GCODE_PARSER)
       SERIAL_ECHOPGM(" args: { ");
-      for (char c = 'A'; c <= 'Z'; ++c) if (seen(c)) SERIAL_CHAR(c, ' ');
+      for (char c = 'A'; c <= 'Z'; ++c) if (seen(c)) { SERIAL_CHAR(c); SERIAL_CHAR(' '); }
       SERIAL_CHAR('}');
     #else
       SERIAL_ECHOPAIR(" args: { ", command_args, " }");

@@ -30,6 +30,10 @@
 
 #include "../../inc/MarlinConfigPre.h"
 
+#if ENABLED(WEBSUPPORT)
+  #include "spiffs.h"
+#endif
+
 #if ENABLED(WIFISUPPORT)
   #include <ESPAsyncWebServer.h>
   #include "wifi.h"
@@ -37,7 +41,6 @@
     #include "ota.h"
   #endif
   #if ENABLED(WEBSUPPORT)
-    #include "spiffs.h"
     #include "web.h"
   #endif
 #endif
@@ -75,32 +78,21 @@ volatile int numPWMUsed = 0,
 // Public functions
 // ------------------------
 
-#if ENABLED(WIFI_CUSTOM_COMMAND)
-
-  bool wifi_custom_command(char * const command_ptr) {
-    #if ENABLED(ESP3D_WIFISUPPORT)
-      return esp3dlib.parse(command_ptr);
-    #else
-      UNUSED(command_ptr);
-      return false;
-    #endif
-  }
-
-#endif
-
-void HAL_init() { i2s_init(); }
+void HAL_init() {
+  i2s_init();
+}
 
 void HAL_init_board() {
+  #if ENABLED(WEBSUPPORT)
+    spiffs_init();
+  #endif
 
-  #if ENABLED(ESP3D_WIFISUPPORT)
-    esp3dlib.init();
-  #elif ENABLED(WIFISUPPORT)
+  #if ENABLED(WIFISUPPORT)
     wifi_init();
     #if ENABLED(OTASUPPORT)
       OTA_init();
     #endif
     #if ENABLED(WEBSUPPORT)
-      spiffs_init();
       web_init();
     #endif
     server.begin();
@@ -108,11 +100,8 @@ void HAL_init_board() {
 }
 
 void HAL_idletask() {
-  #if BOTH(WIFISUPPORT, OTASUPPORT)
+  #if ENABLED(OTASUPPORT)
     OTA_handle();
-  #endif
-  #if ENABLED(ESP3D_WIFISUPPORT)
-    esp3dlib.idletask();
   #endif
 }
 
@@ -194,7 +183,7 @@ void HAL_adc_init() {
   }
 }
 
-void HAL_adc_start_conversion(const uint8_t adc_pin) {
+void HAL_adc_start_conversion(uint8_t adc_pin) {
   const adc1_channel_t chan = get_channel(adc_pin);
   uint32_t mv;
   esp_adc_cal_get_voltage((adc_channel_t)chan, &characteristics[attenuations[chan]], &mv);
